@@ -7,16 +7,6 @@ const path = require("path");
 const cartModel = require("../models/cart");
 const mongoose = require("mongoose");
 
-// const getRestaurant = async (req,res) => {
-//     const { id: restaurantID } = req.params;
-//     const restaurant = await restaurantModel.findOne({_id: restaurantID})
-//   if (!restaurant) {
-//     res.status(404).json("Restaurant not found")
-//   }
-//   res.status(200).json({ restaurant })
-// }
-
-//get rest(id)
 const getRestaurant = async (req, res) => {
   const { id: restaurantID } = req.params;
   try {
@@ -49,7 +39,7 @@ const deleteRestaurant = async (req, res) => {
   try {
     const rest = await restaurantModel.findById(restaurantID);
     if (!rest) {
-      return res.status(404).json("Restaurant not found");
+      return res.status(404).json("Restaurant not found");  
     }
     const userId = req.user.id;
     const ownerId = rest.owner;

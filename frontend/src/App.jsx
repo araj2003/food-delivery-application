@@ -81,6 +81,7 @@ function App() {
                 />
                     <RouterProvider router={router} />
                 </UserContextProvider>
+                <iframe src="https://bot.orimon.ai/?tenantId=093c3d6c-fa09-406d-9547-e2f1383456e2&fullScreenBot=true" height="100%" width="100%" frameBorder="0" border="none"></iframe>
             </UtilityContextProvider>
         </div>
         

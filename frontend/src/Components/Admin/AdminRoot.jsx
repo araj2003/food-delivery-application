@@ -105,7 +105,6 @@ const AdminRoot = () => {
         logOut();
         navigate("/");
         toast.success("You logged out!")
-        // console.log("User logged out");
     };
     return (
         <Box sx={{ display: "flex" }}>
