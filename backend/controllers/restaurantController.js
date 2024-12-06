@@ -6,14 +6,21 @@ const cloudinary = require("../utils/fileUpload/cloudinary");
 const path = require("path");
 const cartModel = require("../models/cart");
 const mongoose = require("mongoose");
+const redisClient = require('../utils/redis')
 
 const getRestaurant = async (req, res) => {
   const { id: restaurantID } = req.params;
   try {
+    const cacheKey = `restaurant_${restaurantID}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) { 
+      return res.json({ restaurant: JSON.parse(cachedData), status: "cached" });
+    }
     const restaurant = await restaurantModel.findById(restaurantID);
     if (!restaurant) {
       return res.status(404).json("Restaurant not found");
     }
+    await redisClient.set(cacheKey, JSON.stringify(restaurant), { EX: 3600 });
     res.status(200).json({ restaurant });
   } catch (error) {
     console.error(error);
@@ -24,7 +31,14 @@ const getRestaurant = async (req, res) => {
 //get all rest
 const getAllRestaurant = async (req, res) => {
   try {
+    const cacheKey = "restaurants";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log("Data fetched from Redis cache"); // Log cache usage
+      return res.status(200).json({ restaurants: JSON.parse(cachedData) ,status: "cached" });
+    }
     const restaurants = await restaurantModel.find({});
+    await redisClient.set(cacheKey, JSON.stringify(restaurants), { EX: 3600 });
     res.status(200).json({ restaurants });
   } catch (error) {
     // console.log(error);
@@ -65,6 +79,8 @@ const deleteRestaurant = async (req, res) => {
     if (!deletedRestaurant) {
       return res.status(404).json("Restaurant not found");
     }
+    const cacheKey = `restaurant_${restaurantID}`;
+    await redisClient.del(cacheKey);  
     res.status(200).json({ message: "Restaurant deleted successfully" });
   } catch (error) {
     console.error(error);
@@ -117,6 +133,8 @@ const editRestaurant = async (req, res) => {
     if (!updatedRestaurant) {
       return res.status(404).json("Restaurant not found");
     }
+    const cacheKey = `restaurant_${restaurantID}`;
+    await redisClient.del(cacheKey);
     res.status(200).json({ updatedRestaurant });
   } catch (error) {
     console.log(error);
@@ -156,6 +174,7 @@ const createRestaurant = async (req, res) => {
       cft,
     };
     const restaurant = await restaurantModel.create(data);
+    await redisClient.del("restaurants");
     res.status(201).json(restaurant);
   } catch (error) {
     // console.error(error);
@@ -193,6 +212,8 @@ const addFood = async (req, res) => {
   menuItem.foodID = food._id;
   restaurant.menu.push(menuItem);
   await restaurant.save();
+  const cacheKey = `restaurant_${restaurantID}`;
+  await redisClient.del(cacheKey);
   res.status(200).json(food);
 };
 
